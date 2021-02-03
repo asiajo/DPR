@@ -1,41 +1,26 @@
-<!--<h3><b>DPR</b></h3>-->
-## <b>Deep Single-Image Portrait Relighting</b> [[Project Page]](http://zhhoper.github.io/dpr.html) <br>
-Hao Zhou, Sunil Hadap, Kalyan Sunkavalli, David W. Jacobs. In ICCV, 2019
+## Face shadow creator and remover
 
-<p><img src="result/obama_00.jpg" width="120px" >
-<img src="result/obama_01.jpg" width="120px" >
-<img src="result/obama_02.jpg" width="120x" >
-<img src="result/obama_03.jpg" width="120px" >
-<img src="result/obama_04.jpg" width="120px" >
-<img src="result/obama_05.jpg" width="120px" >
-<img src="result/obama_06.jpg" width="120px" >
-</p>
-<p><img src="result/light_00.png" width="120px" >
-<img src="result/light_01.png" width="120px" >
-<img src="result/light_02.png" width="120x" >
-<img src="result/light_03.png" width="120px" >
-<img src="result/light_04.png" width="120px" >
-<img src="result/light_05.png" width="120px" >
-<img src="result/light_06.png" width="120px" >
+Combination of two other repositories: https://github.com/zhhoper/DPR and 
+https://github.com/kampta/face-seg and some OpenCV code.
+
+Create face shadow adds a shadow on the face and slight shadow on the hair, but leaves the background untouched.
+Sample images:
+
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/25400249/106814189-5008f000-6672-11eb-9430-7e21af3987af.png" width="200"/>
+  <img src="https://user-images.githubusercontent.com/25400249/106814074-28198c80-6672-11eb-8fdb-ceb969153643.png" width="200"/>
+  <img src="https://user-images.githubusercontent.com/25400249/106814126-38ca0280-6672-11eb-86b2-fd82b46aa0d5.png" width="200"/>
 </p>
 
-### Overview
- - Test script for 512x512 images: `testNetwork_demo_512.py`
- - Test script for 1024x1024 images: `testNetwork_demo_1024.py`
+Usage: 
 
-### Dependencies ###
-<p> pytorch >= 1.0.0 </p>
-<p> opencv >= 4.0.0 </p>
-<P> shtools: https://shtools.oca.eu/shtools/ (optional)</p>
+```
+python create_face_shadow.py --input_data_folder ./data --output_folder ./result
+```
 
-### Notes
-We include an example image and seven example lightings in data. Note that different methods may have different coordinate system for Spherical Harmonics (SH), you may need to change the coordiante system if you use SH lighting from other sources. The coordinate system of our method is in accordance with shtools, we provide a function utils_normal.py in utils to help you tansfer the coordinate system from [bip2017](https://gravis.dmi.unibas.ch/PMM/data/bip/) and [sfsNet](https://senguptaumd.github.io/SfSNet/) to our coordinate system. To use utils_normal.py you need to install shtools. The code is for research purpose only.
+Shadow remover to come soon.
 
-### Data Preparation
-We publish the code for data preparation, please find it in (https://github.com/zhhoper/RI_render_DPR).
-
-### Citation
-If you use this code for your research, please consider citing:
+For light modification model credits to:
 ```
 @InProceedings{DPR,
   title={Deep Single Portrait Image Relighting},
