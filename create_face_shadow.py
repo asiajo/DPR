@@ -3,17 +3,17 @@ import numpy as np
 import cv2
 from PIL import Image
 from torchvision import transforms
-import torch
-from nets.MobileNetV2_unet import MobileNetV2_unet
 from testNetwork_demo_512 import get_shadowed_photos
 import os
 import argparse
 
-FACE_SEG = "./model/face_seg.pt"
-device = torch.device("cpu")
+from utils.utils_shadow import load_model, get_segmented_mask, \
+    get_image_padding_data
+
 ext = ['png', 'jpg', 'jpeg']
 
-parser = argparse.ArgumentParser(description='Create face shadow.')
+parser = argparse.ArgumentParser(
+    description='Creates face shadow. Image shall be of a passport photo type.')
 parser.add_argument(
     '--input_data_folder', type=str,
     help='folder which shall be searched for files of types: ' + ' '.join(ext),
@@ -26,47 +26,6 @@ args = parser.parse_args()
 
 DATA_FOLDER = args.input_data_folder
 OUT_FOLDER = args.output_folder
-
-
-def load_model():
-    """
-    Loads pre-trained model and weights for face segmentation
-    Returns: model
-    """
-    unet = MobileNetV2_unet(None).to(device)
-    state_dict = torch.load(FACE_SEG, map_location='cpu')
-    unet.load_state_dict(state_dict)
-    unet.eval()
-    return unet
-
-
-def get_segmented_mask(image, size):
-    """
-    Segments received image for: face (with a neck), hair and the rest.
-
-    Args:
-        image: image to be segmented. shall actually contain the face
-        size: size of the image
-
-    Returns: mask with the values: 0 for background 1 for skin and 2 for hair
-
-    """
-    pil_img = Image.fromarray(image)
-    torch_img = transform(pil_img)
-    torch_img = torch_img.unsqueeze(0)
-    torch_img = torch_img.to(device)
-    # Forward Pass
-    logits = model(torch_img)
-    mask = np.argmax(logits.data.cpu().numpy(), axis=1).squeeze()
-    mask = np.where((mask == 1), .6, mask)
-    mask = np.where((mask == 2), .4, mask)
-    mask *= 255
-    mask = mask.astype(np.uint8)
-    mask = np.array(Image.fromarray(mask).resize((size, size)))
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
-    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations=3)
-    mask = cv2.medianBlur(mask, 5)
-    return mask
 
 
 def paste_shadow_to_original_img(shaded, image, mask, padding_x, padding_y):
@@ -107,21 +66,13 @@ def process_face_shading(image_paths):
     for image_file in image_paths:
         image = cv2.imread(image_file)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        h, w, channels = image.shape
-        padding_x = 0
-        padding_y = 0
-        if h > w:
-            padding_y = int((h - w) / 2)
-            max_size = h
-        else:
-            padding_x = int((w - h) / 2)
-            max_size = w
+        max_size, padding_x, padding_y = get_image_padding_data(image)
 
         image = cv2.copyMakeBorder(
             image, padding_x, padding_x, padding_y, padding_y,
             cv2.BORDER_CONSTANT, None, [0, 0, 0])
 
-        mask = get_segmented_mask(image, max_size)
+        mask = get_segmented_mask(image, max_size, .6, model, transform)
         shadowed_photos = get_shadowed_photos(image)
 
         img_name = image_file.split("/")[-1]
